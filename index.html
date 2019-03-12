@@ -1,0 +1,101 @@
+<html>
+	<head><title></title></head>
+
+	<body style="background:black;">
+		<canvas id="canvas" width="800" height="550"></canvas>
+
+		<script src="utils.js"></script>		
+		<script>
+			const $can = document.getElementById('canvas');
+			const ctx = $can.getContext('2d');
+			const barScale = 57.5;
+
+			let animationDelay = 1;	
+			let freqs;
+			let counter = 0;
+			let sineFreqs = [];
+			let cx = CIRCLE_ORIGIN[0];
+			let cy = CIRCLE_ORIGIN[1];
+			let x;
+			let y;
+			let barWidth = 10;
+			let endY;
+			let running = true;
+			let forward = true;
+
+			function animate() {
+				animationDelay--;
+				if (animationDelay === 0) {
+					animationDelay = 1;
+					if (counter < freqs.length) {
+
+						ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+						if (forward) {
+							sineFreqs.push(freqs[counter]);
+						} else {
+							sineFreqs.pop();
+						}
+
+						drawBar(freqs[counter]);
+						drawSine(sineFreqs);
+						drawPhase(freqs[counter]);
+						counter++;
+					} else {
+						reverse();
+						reset();
+					}
+				}
+
+				if (running) window.requestAnimationFrame(animate);
+			}	
+
+			function reverse() {
+				for (let i=0; i<freqs.length / 2; i++) {
+					let sf = freqs[i];
+					freqs[i] = freqs[freqs.length - i];
+					freqs[freqs.length - i] = sf;
+				}
+			}
+
+			function drawBar(freq) {
+				y = CANVAS_HEIGHT / 2 + CIRCLE_RADIUS;
+				x = CANVAS_WIDTH / 2 - CIRCLE_RADIUS - barWidth - 15;
+				endY = freq * -1 * barScale;
+				ctx.strokeStyle = radToHSL(freq); 
+				ctx.strokeRect(x, y, barWidth, endY);
+			}	
+			function drawSine(freqs) {
+				let x = CANVAS_WIDTH / 2 - CIRCLE_RADIUS;
+				let y = 0;
+				ctx.beginPath();
+				ctx.moveTo(x, CANVAS_HEIGHT / 2);
+
+				for (let i =0; i < freqs.length; i++) {	
+					y = Math.sin(degToRad(i)) * CANVAS_HEIGHT / 4;
+					ctx.lineTo(x, y + CANVAS_HEIGHT / 2);	
+					x++;
+				}
+				ctx.stroke();
+			}
+
+			function drawPhase(freq) {
+				ctx.beginPath();
+				ctx.arc(
+					cx, cy,
+					CIRCLE_RADIUS, 0, Math.PI * 2
+				);
+				ctx.moveTo(cx, cy);
+				ctx.arc(cx, cy, CIRCLE_RADIUS, freq, 5);
+				ctx.stroke();
+			}
+			
+			function reset() {
+				running = true;
+				forward = !forward;
+				counter = 0;
+			}
+			freqs = testFreqs();
+			window.requestAnimationFrame(animate);
+		</script>
+	</body> </html>	
+
